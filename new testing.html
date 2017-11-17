@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html">
+    <title>Github API Webapp using jQuery - Treehouse Demo</title>
+    <meta name="author" content="Jake Rocheleau">
+    <link rel="shortcut icon" href="http://d15dxvojnvxp1x.cloudfront.net/assets/favicon.ico">
+    <link rel="icon" href="http://d15dxvojnvxp1x.cloudfront.net/assets/favicon.ico">
+    <link rel="stylesheet" type="text/css" media="all" href="css/styles.css">
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+</head>
+
+<body>
+    <div id="w">
+        <h1>Simple Github API Webapp</h1>
+        <p>Enter a single Github username below and click the button to display profile info via JSON.</p>
+
+        <input type="text" name="ghusername" id="ghusername" placeholder="Github username...">
+
+        <a href="#" id="ghsubmitbtn">Pull User Data</a>
+
+        <div id="ghapidata" class="clearfix"></div>
+    </div>
+    <script type="text/javascript">
+        $(function() {
+            $('#ghsubmitbtn').on('click', function(e) {
+                e.preventDefault();
+                $('#ghapidata').html('<div id="loader"><img src="css/loader.gif" alt="loading..."></div>');
+
+                var username = $('#ghusername').val();
+                // var requri = 'https://api.github.com/users/' + username;
+                var repouri = 'https://api.github.com/users/openebs/repos';
+                var reponame = new Set();
+                var users = new Set();
+                var test = new Map();
+                var loc = [];
+                // var test = new Map();
+                reponame.add('openebs');
+
+                reponame.add('maya');
+                reponame.add('jiva');
+                reponame.add('elves');
+                reponame.add('mayaserver');
+                reponame.add('easy-jupyter');
+                reponame.add('longhorn');
+                reponame.add('mvol');
+                reponame.add('specs');
+
+
+                requestJSON(repouri, function(json) {
+                    if (json.message == "Not Found" || username == '') {
+                        $('#ghapidata').html("<h2>No User Info Found</h2>");
+                    } else {
+                        var outhtml = '';
+                        var repositories;
+                        $.getJSON(repouri, function(json) {
+                            repositories = json;
+                            outputPageContent();
+                        });
+
+                        function outputPageContent() {
+                            if (repositories.length == 0) {
+                                outhtml = outhtml + '<p>No repos!</p></div>';
+                            } else {
+                                $.each(repositories, function(index) {
+                                    if (reponame.has(repositories[index].name)) {
+                                        // console.log(repositories[index].name);
+                                        var contri = 'https://api.github.com/repos/openebs/' + repositories[index].name + '/contributors';
+
+                                        var contributor;
+                                        $.getJSON(contri, function(json) {
+                                            contributor = json;
+                                            outputContri();
+                                            for (var i = 0; i < loc.length; i++) {
+                                                console.log(loc(i));
+                                                console('this is location');
+                                            }
+
+                                        });
+
+                                        function outputContri() {
+                                            if (contributor.length == 0) {
+                                                outhtml = outhtml + '<p>No contibutor!</p>';
+                                            } else {
+
+                                                // outhtml = outhtml + '<br><h2><a href="' + repositories[index].html_url + '" target="_blank">' + repositories[index].name + '</a></h2><br>';
+
+                                                $.each(contributor, function(index) {
+                                                    if (!users.has(contributor[index].avatar_url)) {
+                                                        users.add(contributor[index].avatar_url);
+                                                        usfnmae = contributor[index].name;
+
+
+                                                        var userurl = 'https://api.github.com/users/' + contributor[index].login;
+                                                        var location;
+                                                        var contrilocation;
+                                                        $.getJSON(userurl, function(json) {
+                                                            contrilocation = json;
+                                                            getlocation();
+                                                        });
+
+                                                        function getlocation() {
+                                                            location = contrilocation.location;
+                                                            console.log('inside the location function');
+
+
+
+                                                            // extracting longitute and latitude
+                                                            latilogurl = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + contrilocation.location + '&key=AIzaSyC4O9P43xMKBg7iQV4RTS9HoEnRQjqvDsY'
+                                                            var lonlati;
+                                                            $.getJSON(latilogurl, function(json) {
+                                                                lonlati = json;
+                                                                outputPageContent1();
+                                                            });
+
+                                                            function outputPageContent1() {
+                                                                // console.log(contrilocation.location);
+
+                                                                // console.log(lonlati.geometry.location.lat + " =lati= " + lonlati.geometry.location.lat);
+                                                                // console.log(lonlati.results[0].geometry.location.lat);
+                                                                var obj = {
+                                                                    lat: lonlati.results[0].geometry.location.lat,
+                                                                    lng: lonlati.results[0].geometry.location.lng
+                                                                }
+                                                                console.log(obj);
+                                                                loc.push(obj);
+                                                                // console.log(lonlati);
+
+
+                                                            }
+
+
+
+
+
+
+
+
+
+                                                        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                        var testobj = {
+                                                            name: contributor[index].login,
+                                                            picurl: contributor[index].avatar_url,
+                                                            commit: contributor[index].contributions,
+                                                            loc: location
+
+                                                        };
+
+
+                                                        if (usfnmae == undefined) {
+                                                            usfnmae = contributor[index].login;
+                                                        }
+                                                        test.set(contributor[index].avatar_url, testobj);
+                                                        // outhtml = outhtml + '<div  class="hovercheck" style="">';
+                                                        // outhtml = outhtml + '<img src="' + contributor[index].avatar_url + 'alt="' + contributor[index].login + '">';
+                                                        // outhtml = outhtml + '<a href="' + contributor[index].html_url + '" target="_blank"> <p>' + usfnmae + '</p></a>';
+                                                        // outhtml = outhtml + ' </div>'
+                                                        // console.log(testobj.name + " first= " + testobj.commit);
+
+                                                    } else {
+                                                        // test.get(contributor[index].avatar_url.commit);
+                                                        var testobj = {
+                                                            name: contributor[index].login,
+                                                            picurl: contributor[index].avatar_url,
+                                                            commit: contributor[index].contributions
+
+                                                        };
+                                                        testobj.commit = test.get(contributor[index].avatar_url).commit + testobj.commit;
+                                                        test.set(contributor[index].avatar_url, testobj);
+                                                        // console.log(testobj.name + " second= " + testobj.commit);
+
+                                                    }
+                                                });
+                                                outhtml = outhtml + '';
+
+
+                                            }
+                                            // $('#ghapidata').html(outhtml);
+                                        }
+
+
+                                    }
+                                });
+                                // outhtml = outhtml + '</ul></div>';
+                            }
+                            // $('#ghapidata').html(outhtml);
+                        } // end outputPageContent()
+
+
+
+
+                    } // end else statement
+
+                }); // end requestJSON Ajax call
+
+
+
+
+
+
+            }); // end click event handler
+
+            function requestJSON(url, callback) {
+                $.ajax({
+                    url: url,
+                    complete: function(xhr) {
+                        callback.call(null, xhr.responseJSON);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

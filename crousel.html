@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html">
+    <title>OpenEBS Api</title>
+    <meta name="author" content="Jake Rocheleau">
+    <link rel="shortcut icon" href="http://d15dxvojnvxp1x.cloudfront.net/assets/favicon.ico">
+    <link rel="icon" href="http://d15dxvojnvxp1x.cloudfront.net/assets/favicon.ico">
+    <link rel="stylesheet" type="text/css" media="all" href="css/styles.css">
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+
+    <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+    <style>
+        .main-div {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .main-div .hovercheck {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            text-align: center;
+            flex-direction: column;
+            height: 140px;
+            width: 140px;
+        }
+        
+        .main-div .hovercheck img {
+            height: 70px;
+            width: 70px;
+            border-radius: 50%;
+        }
+        /* .main-div .hovercheck:hover img {
+            height: 90px;
+            width: 90px;
+        }
+         */
+        
+        .main-div .hovercheck p {
+            display: none;
+        }
+        /* .main-div .hovercheck:hover p {
+            display: block;
+            transform: scale(1);
+        } */
+    </style>
+</head>
+
+<body>
+    <div id="ghapidata">>
+
+
+
+
+
+    </div>
+
+    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+    </a>
+    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+    </a>
+    </div>
+
+    <div id="w">
+        <h1></h1>
+        <p>Enter the organization name </p>
+
+        <input type="text" name="ghusername" id="ghusername" placeholder="Github username...">
+
+        <a href="#" id="ghsubmitbtn">Pull organization Data</a>
+
+        <div id="ghapidata" class="clearfix"></div>
+    </div>
+    <script type="text/javascript">
+        // var test = new Map();
+        $(function() {
+            $(window).on('load', function(e) {
+                e.preventDefault();
+                $('#ghapidata').html('<div id="loader"><img src="css/loader.gif" alt="loading..."></div>');
+
+                var username = $('#ghusername').val();
+                var requri = 'https://api.github.com/users/openebs';
+                var repouri = 'https://api.github.com/users/openebs/repos';
+                var users = new Set();
+                var test = new Map();
+                var l = 0;
+                requestJSON(requri, function(json) {
+                    if (json.message == "Not Found" || username == '') {
+                        $('#ghapidata').html("<h2>No User Info Found</h2>");
+                    } else {
+                        // else we have a user and we display their info
+                        var fullname = json.name;
+                        var username = json.login;
+                        var aviurl = json.avatar_url;
+                        var profileurl = json.html_url;
+                        var location = json.location;
+                        var followersnum = json.followers;
+                        var followingnum = json.following;
+                        var reposnum = json.public_repos;
+
+                        if (fullname == undefined) {
+                            fullname = username;
+                        }
+
+                        var outhtml = '  <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">';
+                        var outhtml = '   <div class="carousel-inner" role="listbox">';
+                        var outhtml = '  <div class="carousel-item active">';
+                        // outhtml = outhtml + '<div class="ghcontent"><div class="avi"><a href="' + profileurl + '" target="_blank"><img src="' + aviurl + '" width="80" height="80" alt="' + username + '"></a></div>';
+                        // outhtml = outhtml + '<p>Followers: ' + followersnum + ' - Following: ' + followingnum + '<br>Repos: ' + reposnum + '</p></div>';
+                        // outhtml = outhtml + '<div class="repolist clearfix">';
+
+                        var repositories;
+                        $.getJSON(repouri, function(json) {
+                            repositories = json;
+                            outputPageContent();
+
+                        });
+
+                        function outputPageContent() {
+
+                            outhtml = outhtml + '<div class="main-div" style="">';
+                            if (repositories.length == 0) {
+                                outhtml = outhtml + '<p>No repos!</p></div>';
+                            } else {
+                                // outhtml = outhtml + '';
+
+                                $.each(repositories, function(index) {
+                                    // outhtml = outhtml + '<li><a href="' + repositories[index].html_url + '" target="_blank">' + repositories[index].name + '</a></li>';
+
+                                    var contri = 'https://api.github.com/repos/openebs/' + repositories[index].name + '/contributors';
+
+                                    var contributor;
+                                    $.getJSON(contri, function(json) {
+                                        contributor = json;
+                                        var outhtml = '  <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">';
+                                        var outhtml = '   <div class="carousel-inner" role="listbox">';
+                                        var outhtml = '  <div class="carousel-item active">';
+                                        outputContri();
+                                        // for (var [key, value] of test.entries()) {
+                                        //     console.log(test.get(key));
+                                        // }
+                                        // console.log('ali');
+
+                                    });
+
+                                    function outputContri() {
+
+
+
+                                        if (contributor.length == 0) {
+                                            outhtml = outhtml + '<p>No contibutor!</p>';
+                                        } else {
+
+                                            // outhtml = outhtml + '<br><h2><a href="' + repositories[index].html_url + '" target="_blank">' + repositories[index].name + '</a></h2><br>';
+
+                                            $.each(contributor, function(index) {
+
+                                                if (!users.has(contributor[index].avatar_url)) {
+                                                    users.add(contributor[index].avatar_url);
+                                                    usfnmae = contributor[index].name
+
+                                                    var testobj = {
+                                                        name: contributor[index].login,
+                                                        picurl: contributor[index].avatar_url,
+                                                        commit: contributor[index].contributions
+
+                                                    };
+
+
+                                                    if (usfnmae == undefined) {
+                                                        usfnmae = contributor[index].login;
+                                                    }
+                                                    test.set(contributor[index].avatar_url, testobj);
+
+                                                    if (l < 30) {
+                                                        outhtml = outhtml + '<div  class="hovercheck" style="">';
+                                                        outhtml = outhtml + '<img src="' + contributor[index].avatar_url + 'alt="' + contributor[index].login + '" title="' + contributor[index].login + ' ">';
+                                                        outhtml = outhtml + '<a href="' + contributor[index].html_url + '" target="_blank"> <p>' + usfnmae + '</p></a>';
+                                                        outhtml = outhtml + ' </div>'
+                                                        console.log(testobj.name + " first= " + testobj.commit);
+                                                        l++;
+                                                    } else if (l == 30) {
+                                                        outhtml = outhtml + '</div></div>';
+                                                        outhtml = outhtml + '<div class="carousel-item">';
+                                                        outhtml = outhtml + '<div class="main-div" style="">';
+                                                        l = 0;
+                                                    }
+
+                                                } else {
+                                                    // test.get(contributor[index].avatar_url.commit);
+                                                    var testobj = {
+                                                        name: contributor[index].login,
+                                                        picurl: contributor[index].avatar_url,
+                                                        commit: contributor[index].contributions
+
+                                                    };
+                                                    testobj.commit = test.get(contributor[index].avatar_url).commit + testobj.commit;
+                                                    test.set(contributor[index].avatar_url, testobj);
+                                                    console.log(testobj.name + " second= " + testobj.commit);
+
+                                                }
+                                            });
+                                            outhtml = outhtml + '';
+
+
+                                        }
+                                        $('#ghapidata').html(outhtml + '</div>');
+                                    }
+                                });
+                            }
+                            $('#ghapidata').html(outhtml);
+
+
+                        } // end outputPageContent()
+
+                    } // end else statement
+
+
+                });
+                // outhtml = outhtml + '</div>'; // end requestJSON Ajax call
+            }); // end click event handler
+
+            function requestJSON(url, callback) {
+                $.ajax({
+                    url: url,
+                    complete: function(xhr) {
+                        callback.call(null, xhr.responseJSON);
+
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+
+</html>
